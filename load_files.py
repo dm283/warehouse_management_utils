@@ -20,17 +20,16 @@ else:
 
 BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
 BACKEND_PORT = config['main']['backend_port']
-PATH_INCOME = config['folders']['path_income']
+PATH_INCOME_READY = config['folders']['path_income_ready']
 PATH_PROCESSED = config['folders']['path_processed']
 PATH_INCORRECTS = config['folders']['path_incorrects']
 
-for p in [PATH_INCOME, PATH_PROCESSED, PATH_INCORRECTS]:
+for p in [PATH_INCOME_READY, PATH_PROCESSED, PATH_INCORRECTS]:
     if not os.path.exists(p):
         os.mkdir(p)
 
 USERNAME = config['user']['username']
 PWD = config['user']['pwd']
-
 
 QREADER = QReader()
 
@@ -180,9 +179,13 @@ def convert_pdf_to_jpg(pdf_pages_folder, jpg_files_folder):
 def move_income_file(dst, file_name, file_path):
     #
     file_path_postfix = datetime.now().strftime("%Y%m%d%H%M%S%f")
-    fname_splited = file_name.rpartition('.')
-    new_filename = f'{fname_splited[0]}_{file_path_postfix}.{fname_splited[2]}'
+    if '.' in file_name:
+        fname_splited = file_name.rpartition('.')
+        new_filename = f'{fname_splited[0]}_{file_path_postfix}.{fname_splited[2]}'
+    else:
+        new_filename =  f'{file_name}_{file_path_postfix}'
     new_file_path = os.path.join(dst, new_filename)
+    
     shutil.move(file_path, new_file_path)
     print('[ info ]  файл', file_name, 'перемещён в папку', dst.rpartition('/')[-1])
 
@@ -237,9 +240,9 @@ print('OK')
 
 while(True):
     print('[ info ]  ожидание нового файла...')
-    for file_name in os.listdir(PATH_INCOME):
+    for file_name in os.listdir(PATH_INCOME_READY):
         sleep(1)
-        file_path = os.path.join(PATH_INCOME, file_name)
+        file_path = os.path.join(PATH_INCOME_READY, file_name)
         if not os.path.isfile(file_path):
             continue
         print(f'[ info ]  поступил новый файл {file_name}')
