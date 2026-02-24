@@ -8,45 +8,47 @@ from datetime import date, datetime
 from pathlib import Path
 from pdf2image import convert_from_path
 from qreader import QReader
+from common_foo import post_notification, authorization_in_api, BACKEND_IP_ADDRESS, BACKEND_PORT, PATH_INCOME_READY, PATH_PROCESSED, \
+        PATH_INCORRECTS, USERNAME, PWD
 
-BASE_DIR = Path(__file__).resolve().parent
+# BASE_DIR = Path(__file__).resolve().parent
 
-config = configparser.ConfigParser()
-config_file = BASE_DIR / 'config.ini'
-if os.path.exists(config_file):
-    config.read(config_file, encoding='utf-8')
-else:
-    print("error! config file doesn't exist"); sys.exit()
+# config = configparser.ConfigParser()
+# config_file = BASE_DIR / 'config.ini'
+# if os.path.exists(config_file):
+#     config.read(config_file, encoding='utf-8')
+# else:
+#     print("error! config file doesn't exist"); sys.exit()
 
-BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
-BACKEND_PORT = config['main']['backend_port']
-PATH_INCOME_READY = config['folders']['path_income_ready']
-PATH_PROCESSED = config['folders']['path_processed']
-PATH_INCORRECTS = config['folders']['path_incorrects']
+# BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
+# BACKEND_PORT = config['main']['backend_port']
+# PATH_INCOME_READY = config['folders']['path_income_ready']
+# PATH_PROCESSED = config['folders']['path_processed']
+# PATH_INCORRECTS = config['folders']['path_incorrects']
 
 for p in [PATH_INCOME_READY, PATH_PROCESSED, PATH_INCORRECTS]:
     if not os.path.exists(p):
         os.mkdir(p)
 
-USERNAME = config['user']['username']
-PWD = config['user']['pwd']
+# USERNAME = config['user']['username']
+# PWD = config['user']['pwd']
 
 QREADER = QReader()
 
-def authorization_in_api():
-    #
-    url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/token'
-    data = {'username': USERNAME, 'password': PWD}
-    try:
-        response = requests.post(url, data=data)
-        if response.status_code == 200:
-            return response.json()['access_token']
-        else:
-            print('Error:', response.status_code)
-            return None
-    except requests.exceptions.RequestException as e:
-        print('Error:', e)
-        return None
+# def authorization_in_api():
+#     #
+#     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/token'
+#     data = {'username': USERNAME, 'password': PWD}
+#     try:
+#         response = requests.post(url, data=data)
+#         if response.status_code == 200:
+#             return response.json()['access_token']
+#         else:
+#             print('Error:', response.status_code)
+#             return None
+#     except requests.exceptions.RequestException as e:
+#         print('Error:', e)
+#         return None
     
 
 def get_user_data(username, api_access_token):
@@ -269,3 +271,5 @@ while(True):
         except Exception as e:
             print(f'[ error ]  файл {file_name} некорректный')
             move_income_file(dst=PATH_INCORRECTS, file_name=file_name, file_path=file_path)
+            post_notification(incorrect_file_name=file_name, 
+                                               ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)

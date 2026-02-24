@@ -7,26 +7,23 @@ from pdf2image.exceptions import (
     PDFPageCountError,
     PDFSyntaxError
 )
+from common_foo import post_notification, authorization_in_api, BACKEND_IP_ADDRESS, BACKEND_PORT, PATH_INCOME_READY, PATH_PROCESSED, \
+        PATH_INCORRECTS, USERNAME, PWD, WAITING_SCANNER_WRITING_FILE_TIME, MAX_WAITING_TIME, PATH_INCOME_PRE
 
-
-BASE_DIR = Path(__file__).resolve().parent
-
-config = configparser.ConfigParser()
-config_file = BASE_DIR / 'config.ini'
-if os.path.exists(config_file):
-    config.read(config_file, encoding='utf-8')
-else:
-    print("error! config file doesn't exist"); sys.exit()
-
-PATH_INCOME_PRE = config['folders']['path_income_pre']
-PATH_INCOME_READY = config['folders']['path_income_ready']
-PATH_INCORRECTS = config['folders']['path_incorrects']
-WAITING_SCANNER_WRITING_FILE_TIME = int(config['tech']['waiting_scanner_writing_file_time'])
-MAX_WAITING_TIME = int(config['tech']['max_waiting_time'])
+# BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
+# BACKEND_PORT = config['main']['backend_port']
+# PATH_INCOME_PRE = config['folders']['path_income_pre']
+# PATH_INCOME_READY = config['folders']['path_income_ready']
+# PATH_INCORRECTS = config['folders']['path_incorrects']
 
 for p in [PATH_INCOME_PRE, PATH_INCOME_READY, PATH_INCORRECTS]:
     if not os.path.exists(p):
         os.mkdir(p)
+
+print(f'авторизация пользователя {USERNAME} в API ...', end=' ')
+api_access_token = authorization_in_api()
+print('OK')
+
 
 while(True):
     print('[ info ]  ожидание нового файла от сканера...')
@@ -67,9 +64,13 @@ while(True):
                 # os.replace(src_path, error_dst_path)
                 shutil.move(src_path, error_dst_path)
                 print(f'\n[ error ]  {file_name} - папка, а не файл - перемещена в Incorrects')
+                post_notification(incorrect_file_name=file_name, 
+                                               ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
                 break
             os.replace(src_path, error_dst_path)
             print(f'\n[ error ]  {file_name} - не PDF-файл - перемещен в Incorrects')
+            post_notification(incorrect_file_name=file_name, 
+                                               ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
             break
         
         print(f'ожидание сканирования {WAITING_SCANNER_WRITING_FILE_TIME} сек...')
@@ -78,6 +79,8 @@ while(True):
             if WAITING_SCANNER_WRITING_FILE_TIME * attempt >= MAX_WAITING_TIME:
                 os.replace(src_path, error_dst_path)
                 print(f'[ error ]  превышено максимальное время ожидания сканирования {MAX_WAITING_TIME} сек - файл перемещен в Incorrects')                
+                post_notification(incorrect_file_name=file_name, 
+                                               ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
                 break
             time.sleep(WAITING_SCANNER_WRITING_FILE_TIME)
             attempt += 1
@@ -94,4 +97,7 @@ while(True):
                 print(f'[ info ]  {WAITING_SCANNER_WRITING_FILE_TIME * attempt} сек - файл в процессе записи сканером ( {e} )')
             except Exception as e2:
                 os.replace(src_path, error_dst_path)
-                print('[ error ]  ошибка файла - файл перемещен в Incorrects'); break
+                print('[ error ]  ошибка файла - файл перемещен в Incorrects')
+                post_notification(incorrect_file_name=file_name, 
+                                               ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
+                break
