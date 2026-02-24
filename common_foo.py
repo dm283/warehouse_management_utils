@@ -47,7 +47,7 @@ def authorization_in_api():
 
 def post_notification(incorrect_file_name, ip, port, api_access_token):
     #
-    notification = f'Сканирование документов - ошибка файла {incorrect_file_name}'
+    notification = f'Ошибка загрузки сканированого файла {incorrect_file_name}'
     data = str({'file_name': incorrect_file_name})
     url = f'http://{ip}:{port}/notifications'
     data = {
