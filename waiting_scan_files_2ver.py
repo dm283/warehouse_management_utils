@@ -64,12 +64,12 @@ while(True):
                 # os.replace(src_path, error_dst_path)
                 shutil.move(src_path, error_dst_path)
                 print(f'\n[ error ]  {file_name} - папка, а не файл - перемещена в Incorrects')
-                post_notification(incorrect_file_name=file_name, 
+                post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
                 break
             os.replace(src_path, error_dst_path)
             print(f'\n[ error ]  {file_name} - не PDF-файл - перемещен в Incorrects')
-            post_notification(incorrect_file_name=file_name, 
+            post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
             break
         
@@ -79,7 +79,7 @@ while(True):
             if WAITING_SCANNER_WRITING_FILE_TIME * attempt >= MAX_WAITING_TIME:
                 os.replace(src_path, error_dst_path)
                 print(f'[ error ]  превышено максимальное время ожидания сканирования {MAX_WAITING_TIME} сек - файл перемещен в Incorrects')                
-                post_notification(incorrect_file_name=file_name, 
+                post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
                 break
             time.sleep(WAITING_SCANNER_WRITING_FILE_TIME)
@@ -98,6 +98,6 @@ while(True):
             except Exception as e2:
                 os.replace(src_path, error_dst_path)
                 print('[ error ]  ошибка файла - файл перемещен в Incorrects')
-                post_notification(incorrect_file_name=file_name, 
+                post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
                 break

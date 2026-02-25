@@ -45,15 +45,22 @@ def authorization_in_api():
         return None
     
 
-def post_notification(incorrect_file_name, ip, port, api_access_token):
+def post_notification(sender, incorrect_file_name, ip, port, api_access_token):
     #
-    notification = f'Ошибка загрузки сканированого файла {incorrect_file_name}'
+    is_notification = True
+    sender = sender
+    receiver = 'admin'
+    msg_text = f'Ошибка загрузки сканированого файла {incorrect_file_name}'
     data = str({'file_name': incorrect_file_name})
-    url = f'http://{ip}:{port}/notifications'
+    url = f'http://{ip}:{port}/messages'
     data = {
-        'notification': notification,
+        'is_notification': is_notification,
+        'sender': sender,
+        'receiver': receiver,
+        'msg_text': msg_text,
         'data': data,
     }
+    print('data = ', data)
     try:
         response = requests.post(url, data=data, headers={'Authorization': f'Bearer {api_access_token}'})
         if response.status_code == 200:

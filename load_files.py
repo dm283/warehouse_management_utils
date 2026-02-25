@@ -271,5 +271,5 @@ while(True):
         except Exception as e:
             print(f'[ error ]  файл {file_name} некорректный')
             move_income_file(dst=PATH_INCORRECTS, file_name=file_name, file_path=file_path)
-            post_notification(incorrect_file_name=file_name, 
+            post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)
