@@ -4,6 +4,7 @@ import ast
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"], )
@@ -30,7 +31,6 @@ class ConnectionManager:
             print('connection =', connection)
             await connection.send_text(message)
 
-
 manager = ConnectionManager()
 
 @app.websocket("/ws/{client_id}")
@@ -52,3 +52,4 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         # await manager.broadcast(f"Client #{client_id} left the chat")
+        
