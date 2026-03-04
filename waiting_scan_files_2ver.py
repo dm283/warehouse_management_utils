@@ -27,7 +27,7 @@ print('OK')
 
 while(True):
     print('[ info ]  ожидание нового файла от сканера...')
-    time.sleep(1)
+    time.sleep(5)
     for file_name in os.listdir(PATH_INCOME_PRE):
         print(f'[ info ]  поступил новый файл {file_name}.', end=' ')
 
