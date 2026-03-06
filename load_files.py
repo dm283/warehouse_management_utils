@@ -11,49 +11,21 @@ from qreader import QReader
 from common_foo import post_notification, authorization_in_api, BACKEND_IP_ADDRESS, BACKEND_PORT, PATH_INCOME_READY, PATH_PROCESSED, \
         PATH_INCORRECTS, USERNAME, PWD
 
-# BASE_DIR = Path(__file__).resolve().parent
 
-# config = configparser.ConfigParser()
-# config_file = BASE_DIR / 'config.ini'
-# if os.path.exists(config_file):
-#     config.read(config_file, encoding='utf-8')
-# else:
-#     print("error! config file doesn't exist"); sys.exit()
+api_access_token, user_info = '', ''
 
-# BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
-# BACKEND_PORT = config['main']['backend_port']
-# PATH_INCOME_READY = config['folders']['path_income_ready']
-# PATH_PROCESSED = config['folders']['path_processed']
-# PATH_INCORRECTS = config['folders']['path_incorrects']
 
 for p in [PATH_INCOME_READY, PATH_PROCESSED, PATH_INCORRECTS]:
     if not os.path.exists(p):
         os.mkdir(p)
 
-# USERNAME = config['user']['username']
-# PWD = config['user']['pwd']
-
 QREADER = QReader()
 
-# def authorization_in_api():
-#     #
-#     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/token'
-#     data = {'username': USERNAME, 'password': PWD}
-#     try:
-#         response = requests.post(url, data=data)
-#         if response.status_code == 200:
-#             return response.json()['access_token']
-#         else:
-#             print('Error:', response.status_code)
-#             return None
-#     except requests.exceptions.RequestException as e:
-#         print('Error:', e)
-#         return None
-    
 
-def get_user_data(username, api_access_token):
+def get_user_data():
+# def get_user_data(username, api_access_token):
     #
-    url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/users/by_name/{username}'
+    url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/users/by_name/{USERNAME}'
     try:
         response = requests.get(url, headers={'Authorization': f'Bearer {api_access_token}'})
         if response.status_code == 200:
@@ -66,10 +38,27 @@ def get_user_data(username, api_access_token):
         return None
 
 
-def get_batch_data(uuid, api_access_token):
+def auth_utility():
+    #
+    global api_access_token, user_info
+
+    print(f'авторизация пользователя {USERNAME} в API ...', end=' ')
+    api_access_token = authorization_in_api()
+    print('OK')
+    print(f'получение данных о пользователе {USERNAME} ...', end=' ')
+    user_info = get_user_data()
+    # user_info = get_user_data(username=USERNAME, api_access_token=api_access_token)
+    print('OK')
+    print('inner auth token =', api_access_token)
+
+
+def get_batch_data(uuid):
+# def get_batch_data(uuid, api_access_token):
     #
     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/batch_by_uuid/{uuid}'
     try:
+        auth_utility()
+        print('token =', api_access_token)
         response = requests.get(url, headers={'Authorization': f'Bearer {api_access_token}'})
         if response.status_code == 200:
             return response.json()
@@ -81,7 +70,8 @@ def get_batch_data(uuid, api_access_token):
         return None
 
 
-def post_document_record(doc_name, doc_id, doc_date, comment, user_uuid_create, api_access_token):
+def post_document_record(doc_name, doc_id, doc_date, comment, user_uuid_create):
+# def post_document_record(doc_name, doc_id, doc_date, comment, user_uuid_create, api_access_token):
     #
     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/document_records'
     data = {
@@ -103,7 +93,8 @@ def post_document_record(doc_name, doc_id, doc_date, comment, user_uuid_create, 
         return None
     
 
-def upload_document(file_path, related_doc_uuid, user_uuid, api_access_token):
+def upload_document(file_path, related_doc_uuid, user_uuid):
+# def upload_document(file_path, related_doc_uuid, user_uuid, api_access_token):
     #
     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/upload_file_for_carpass/{related_doc_uuid}'
     data = {
@@ -124,7 +115,8 @@ def upload_document(file_path, related_doc_uuid, user_uuid, api_access_token):
         return None
 
 
-def post_related_doc_rec(obj_type, obj_type_name, contact_uuid, obj_uuid, doc_uuid, user_uuid, api_access_token):
+def post_related_doc_rec(obj_type, obj_type_name, contact_uuid, obj_uuid, doc_uuid, user_uuid):
+# def post_related_doc_rec(obj_type, obj_type_name, contact_uuid, obj_uuid, doc_uuid, user_uuid, api_access_token):
     #
     url = f'http://{BACKEND_IP_ADDRESS}:{BACKEND_PORT}/create_related_docs_record'
     data = {
@@ -196,7 +188,8 @@ def file_attachment_to_batch_process(batch_uuid, file_name, file_path):
     # actions for attachment file to batch object
 
     # check batch exists and get batch data
-    batch_data = get_batch_data(uuid=batch_uuid, api_access_token=api_access_token)
+    batch_data = get_batch_data(uuid=batch_uuid)
+    # batch_data = get_batch_data(uuid=batch_uuid, api_access_token=api_access_token)
     if batch_data:
         # print(f'check is batch uuid {batch_uuid} exists  -  OK')
         print(f'[ info ]  партия {batch_uuid} существует  -  ОК')
@@ -208,13 +201,13 @@ def file_attachment_to_batch_process(batch_uuid, file_name, file_path):
     # create document_record
     current_datetime = datetime.now(); year = current_datetime.year; month = current_datetime.month; day = current_datetime.day
     res_posted_doc_rec = post_document_record(doc_name=file_name, doc_id='-', doc_date=date(year,month,day), comment='posted by system utility', 
-                            user_uuid_create=user_info['uuid'], api_access_token=api_access_token)
+                            user_uuid_create=user_info['uuid'])
     # print('document_record posted. related_doc_uui =', res_posted_doc_rec['uuid'])
     print('[ info ]  запись document_record добавлена с uuid', res_posted_doc_rec['uuid'])
 
     # create document (upload)
     res_upload_doc = upload_document(file_path=file_path, related_doc_uuid=res_posted_doc_rec['uuid'], 
-                    user_uuid=user_info['uuid'], api_access_token=api_access_token)
+                    user_uuid=user_info['uuid'])
     #print('document uploaded. filename =', res_upload_doc)
     print('[ info ]  запись document добавлена (файл загружен)')
 
@@ -225,20 +218,13 @@ def file_attachment_to_batch_process(batch_uuid, file_name, file_path):
         contact_uuid=batch_data['contact_uuid'],
         obj_uuid=batch_uuid,
         doc_uuid=res_posted_doc_rec['uuid'],
-        user_uuid=user_info['uuid'],
-        api_access_token=api_access_token
+        user_uuid=user_info['uuid']
     )
     # print(f'document has been attached to batch {batch_uuid}')
     print(f'[ info ]  файл прикреплен к партии товаров {batch_uuid}  -  OK')
 
 
-print(f'авторизация пользователя {USERNAME} в API ...', end=' ')
-api_access_token = authorization_in_api()
-print('OK')
-print(f'получение данных о пользователе {USERNAME} ...', end=' ')
-user_info = get_user_data(username=USERNAME, api_access_token=api_access_token)
-print('OK')
-
+auth_utility()
 
 while(True):
     print('[ info ]  ожидание нового файла...')
@@ -271,5 +257,7 @@ while(True):
         except Exception as e:
             print(f'[ error ]  файл {file_name} некорректный')
             move_income_file(dst=PATH_INCORRECTS, file_name=file_name, file_path=file_path)
+
+            print(f'авторизация пользователя {USERNAME} в API ...', end=' ');api_access_token = authorization_in_api();print('OK')
             post_notification(sender=USERNAME, incorrect_file_name=file_name, 
                                                ip=BACKEND_IP_ADDRESS, port=BACKEND_PORT, api_access_token=api_access_token)

@@ -19,13 +19,13 @@ def get_new_notifications(api_access_token):
     try:
         response = requests.get(url, headers={'Authorization': f'Bearer {api_access_token}'})
         if response.status_code == 200:
-            return response.json()
+            return ('ok', response.json())
         else:
             print('Error:', response.status_code)
-            return None
+            return ('error', response.status_code)
     except requests.exceptions.RequestException as e:
         print('Error:', e)
-        return None
+        return ('error', e)
     
 
 def send_websocket_msg():
@@ -39,9 +39,21 @@ def send_websocket_msg():
 
 while True:
     print('[ info ]  проверка новых оповещений в базе данных...')
-    new_notifications = get_new_notifications(api_access_token)
-    # print('new_messages =', new_messages)
-    if new_notifications:
+
+    for i in range(3):  # 3 attempt to get notifications
+        new_notifications = get_new_notifications(api_access_token)
+        if new_notifications[0] == 'ok': break
+        elif new_notifications[1] == 401: 
+            sleep(1); print(f'авторизация пользователя {USERNAME} в API ...', end=' ')
+            api_access_token = authorization_in_api(); print('OK')
+        else: sleep(1)
+
+    if new_notifications[0] == 'error': 
+        print('[ error ]  нет доступа к API основного сервиса')
+        sleep(1)
+        continue
+
+    if new_notifications[1]:
         print('[ info ]  есть новые оповещения - отправка маяка в чат для активации колокольчика')
         send_websocket_msg()
     else:
