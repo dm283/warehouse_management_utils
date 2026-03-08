@@ -13,6 +13,7 @@ else:
 
 BACKEND_IP_ADDRESS = config['main']['backend_ip_address']
 BACKEND_PORT = config['main']['backend_port']
+WEBSOCKET_PORT = config['main']['websocket_port']
 PATH_INCOME_PRE = config['folders']['path_income_pre']
 PATH_INCOME_READY = config['folders']['path_income_ready']
 PATH_PROCESSED = config['folders']['path_processed']

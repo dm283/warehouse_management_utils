@@ -1,7 +1,7 @@
 import requests, json
 from time import sleep
 from websockets.sync.client import connect
-from common_foo import authorization_in_api, BACKEND_IP_ADDRESS, BACKEND_PORT, PATH_INCOME_READY, PATH_PROCESSED, \
+from common_foo import authorization_in_api, BACKEND_IP_ADDRESS, BACKEND_PORT, WEBSOCKET_PORT, PATH_INCOME_READY, PATH_PROCESSED, \
         PATH_INCORRECTS, USERNAME, PWD
 
 
@@ -29,7 +29,7 @@ def get_new_notifications(api_access_token):
     
 
 def send_websocket_msg():
-    with connect("ws://localhost:8001/ws/system") as websocket:
+    with connect(f"ws://localhost:{WEBSOCKET_PORT}/ws/system") as websocket:
         data = {'receiver':'admin', 'message':'test_msg'}
         websocket.send(json.dumps(data))
         
