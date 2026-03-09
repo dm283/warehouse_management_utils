@@ -1,4 +1,4 @@
-# uvicorn websocket_node_service:app --workers 1 --host 0.0.0.0 --port 8001 --reload
+# uvicorn websocket_node_service:app --workers 1 --host 0.0.0.0 --port 8001
 
 import ast
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
